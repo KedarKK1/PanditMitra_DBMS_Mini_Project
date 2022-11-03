@@ -1,0 +1,29 @@
+body{
+    padding:0;
+    margin:0;
+    /* background-color: #7FFFD4; */
+}
+.bg-myBackground{
+    background-image: url(../image/mybackground1.jpg) !important;
+    /* background-image: url(../static/image/mybackground1.jpg) !important; */
+  }
+
+.myTitle
+{
+    color: crimson;
+    /* border-bottom: 3px solid purple; */
+    border-bottom: 3px solid crimson;
+    font-size: 30px;
+}
+
+.border1{
+    border:1px solid black;
+}
+
+.border-top1{
+    border-top: 1px solid black;
+}
+
+.border-left1{
+    border-left: 1px solid black;
+}
