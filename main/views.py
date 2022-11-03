@@ -19,13 +19,18 @@ from django.template.loader import render_to_string
 import datetime
 import random
 import psycopg2
+import mysql.connector
 
 # Connect to an existing database
-conn = psycopg2.connect("dbname=panditMitraDB user=postgres password=1234")
+# conn = psycopg2.connect("dbname=panditMitraData user=root password=admin")
+# conn = mysql.connector.connect(pool_name = "mypool", pool_size = 3)
 
 # Open a cursor to perform database operations
-cur = conn.cursor()
+# cur = conn.cursor()
 # Create your views here.
+conn = mysql.connector.connect(
+    user='root', database='panditMitraData', password='admin', host='127.0.0.1',auth_plugin='mysql_native_password')
+cursor = conn.cursor()
 
 
 def handler404(request, exception):
@@ -63,6 +68,7 @@ def confirmation(request, id):
         mySecreteKey = int(mySecreteKey)
         # print("mySecreteKey is ", mySecreteKey," and it type is ", type(mySecreteKey))
         myUser1 = myUser.objects.get(id=id)
+        # strr = "SELECT * FROM myUser WHERE id="+id
         # print("myUser found ", myUser1)
         userSecretKey = myUser1.secretKey
         # print("User secret key is ", userSecretKey," and its type is ", type(userSecretKey))
@@ -150,7 +156,9 @@ def reviews(response):
 
 def choosePujaForReview(response):
     myPujas = Puja.objects.all()
-    cur.execute("SELECT * FROM Puja")
+    queryset = cur.execute("SELECT * FROM Puja")
+    for puja in queryset:
+        print(puja)
     # print(myPujas)
     return render(response, "choosePujaForReview.html", {"ls": myPujas})
 
