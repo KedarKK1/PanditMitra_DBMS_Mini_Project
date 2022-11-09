@@ -29,7 +29,7 @@ import mysql.connector
 # cur = conn.cursor()
 # Create your views here.
 conn = mysql.connector.connect(
-    user='root', database='panditMitraData', password='admin', host='127.0.0.1',auth_plugin='mysql_native_password')
+    user='root', database='panditmitradata', password='admin', host='127.0.0.1', auth_plugin='mysql_native_password')
 cursor = conn.cursor()
 
 
@@ -70,15 +70,17 @@ def confirmation(request, id):
         myUser1 = myUser.objects.get(id=id)
         # strr = "SELECT * FROM myUser WHERE id="+id
         # print("myUser found ", myUser1)
-        userSecretKey = myUser1.secretKey
+        # userSecretKey = myUser1.secretKey
         # print("User secret key is ", userSecretKey," and its type is ", type(userSecretKey))
-        if(mySecreteKey == userSecretKey):
+        if(mySecreteKey == 111111):
             username = myUser1.username
             password1 = myUser1.password
             print("password of user was", password1)
             email = myUser1.email
             user = User.objects.create_user(
                 username=username, email=email, password=password1)
+            # users = cursor.execute("INSERT INTO auth_user(username, email, password) VALUES (%s, %s, %s)", (username, email, password1))
+            # conn.commit()
             user.save()
             # print("user created")
             messages.info(request, "User created successfully!! Please login")
@@ -109,8 +111,8 @@ def signUp(request):
                 return redirect("/sign-up")
             else:
                 # send email
-                template = render_to_string(
-                    'signUpEmail.html', {'username': username, 'myRandomKey': myRandomKey})
+                # template = render_to_string(
+                #     'signUpEmail.html', {'username': username, 'myRandomKey': myRandomKey})
                 # email1 = EmailMessage(
                 #     'Sign Up link for PanditMitra',  # subject
                 #     template,  # message
@@ -119,14 +121,19 @@ def signUp(request):
                 # )
                 # email1.fail_silently=False
                 # email1.send()
+                # try:
+                #     send_mail('Verification link for PanditMitra',
+                #               template, settings.EMAIL_HOST_USER, [email])
+                # except BadHeaderError:
+                #     return HttpResponse('Invalid header found.')
+                myUser2 = cursor.execute(
+                    "INSERT INTO main_myuser(username, email, password, secretkey) VALUES ( %s, %s, %s, %s )", (username, email, password1, 111111))
+                conn.commit()
 
-                try:
-                    send_mail('Verification link for PanditMitra',
-                              template, settings.EMAIL_HOST_USER, [email])
-                except BadHeaderError:
-                    return HttpResponse('Invalid header found.')
-                myUser1 = myUser.objects.create(
-                    username=username, email=email, password=password1, secretKey=myRandomKey)
+                # myUser1 = myUser.objects.create(
+                #     username=username, email=email, password=password1, secretKey=myRandomKey)
+                # myUser1id = myUser1.id
+                myUser1 = myUser.objects.get(username=username)
                 myUser1id = myUser1.id
                 # print('myUser created')
                 return redirect('confirmation', id=myUser1id)
@@ -145,32 +152,65 @@ def signUp(request):
 
 
 def sortBook(request, nameOfPuja):
-    ls = Puja.objects.filter(nameOfPuja=nameOfPuja)
-    print(ls)
+    # queery2 = cursor.execute("INSERT INTO main_puja(nameOfPuja) VALUES('"+str(nameOfPuja)+"');")
+    # conn.commit()
+    # conn.close()
+    # Commit your changes in the database
+    # print('queery2 ', queery2)
+    # print("queeeey",cursor.fetchall())
+
+    queeeey = cursor.execute(
+        "SELECT * FROM main_puja WHERE nameOfPuja='"+str(nameOfPuja)+"';")
+    print("queeeey2", cursor.fetchall())
+
+    # queeeey9 = cursor.execute("SELECT * FROM main_puja;")
+    # print("queeeey9",cursor.fetchall())
+    # print("queeeey9 one",cursor.fetchone())
+
+    # ls = Puja.objects.filter(nameOfPuja=nameOfPuja)
+    # print(ls)
     return render(request, "book.html", {})
 
 
 def reviews(response):
     return render(response, "chooseReview.html", {})
 
+# def createpuja(request):
+#     # if request.method == 'POST':
+#         # puja = request.POST['puja']
+#     cursor.execute('INSERT INTO main_puja(nameOfPuja) values (%s);', ["geeta_pathan"]);
+#     queryset = cursor.execute("SELECT * FROM main_puja;")
+#     print("queryset", queryset)
+#     for puja in queryset:
+#         print(puja.id)
+#     return render(request, "choosePujaForReview.html", {"ls": "myPujas"})
+
 
 def choosePujaForReview(response):
-    myPujas = Puja.objects.all()
-    queryset = cur.execute("SELECT * FROM Puja")
-    for puja in queryset:
-        print(puja)
-    # print(myPujas)
-    return render(response, "choosePujaForReview.html", {"ls": myPujas})
+    # myPujas = Puja.objects.all()
+    # print("mypujs", myPujas)
+    queryset35 = Puja.objects.raw("select * from main_puja")
+    # cursor.fetchone();
+    # cursor.close()
+    print("queryset", queryset35)
+    # for puja in queryset:
+    #     print(puja)
+    return render(response, "choosePujaForReview.html", {"ls": queryset35})
 
 
 def seeReviews(response):
     ls = Reviews.objects.all()
-    myPujas = Puja.objects.all()
+    # myquery = "select * from main_reviews"
+    myquery36 = Reviews.objects.raw("select * from main_reviews")
+    # ls2 = cursor.execute(myquery)
+    # print("ls2", ls2)
+    # myPujas = Puja.objects.all()
+    myPujas = Puja.objects.raw("select * from main_puja")
     # ls2 = str(Reviews.objects.values_list('created_date'))
     # print(ls2)
     # above code for objects.values_list is working
 
-    ls2 = Reviews.objects.values_list('created_date')
+    # ls2 = Reviews.objects.values_list('created_date')
     # data = datetime.datetime.strptime(ls2, '%Y-%m-%dT%H:%M')
     # print(data)
 
@@ -197,8 +237,17 @@ def seeReviews(response):
 
 
 def book(response):
-    myPujas = Puja.objects.all()
-    return render(response, "book.html", {"items": myPujas})
+    # myPujas = Puja.objects.all()
+    # queryset = cursor.execute("SELECT * FROM main_puja")
+    myPujas2 = Puja.objects.raw("SELECT * FROM main_puja")
+    # print("myPujas2" , myPujas2)
+    # queryset2 = cursor.fetchall()
+    # print("queeeey2",queryset2)
+    # cursor.close()
+    # for puja in queryset2:
+    #     print(puja)
+    #     print(" ------------------------")
+    return render(response, "book.html", {"items": myPujas2})
 
 
 def puja(request, id):
@@ -209,17 +258,41 @@ def puja(request, id):
         title = request.POST['title']
         your_reviews = request.POST['your_reviews']
         pujaName = Puja.objects.get(id=id)
+        # pujaName = Puja.objects.raw("SELECT * FROM main_puja")
+        # pujaName2 = Puja.objects.raw("SELECT * FROM main_puja WHERE id="+id)
+        # print("-----------------puja1- ", pujaName)
+        # print("-----------------puja2- ", pujaName2)
         email = User.objects.get(username=request.user.username).email
         # print(email)
+        fullname = first_name+" "+last_name
         myReviews = Reviews.objects.create(
-            fullName=first_name+" "+last_name, title=title, pujaName=pujaName, email=email, yourRating=yourRating, reviewText=your_reviews)
-        # print(myReviews+" saved!")
-        myReviews.save()
+            fullName=fullname, title=title, pujaName=pujaName, email=email, yourRating=yourRating, reviewText=your_reviews)
+        # with conn.cursor() as cursor:
+        #     cursor.execute("INSERT INTO main_reviews(fullName, title, pujaName, email, yourRating, reviewText) VALUES (%s, %s, %s, %s, %s, %s) ", [fullname, title, pujaName, email, yourRating, your_reviews])
+        #     conn.commit()
+        # print(" saved!", myReviews)
         messages.info(request, 'Review created')
         return redirect("/seeReviews")
     else:
         ls = Puja.objects.get(id=id)
+        givenId = id
+        myquery = "SELECT * FROM main_puja WHERE id = " + str(givenId)
+        ls22 = Puja.objects.raw(myquery)
+        ls23 = cursor.execute(myquery)
+        ls24 = cursor.fetchall()
+        print("-----------------ls1- ", ls)
+        print("-----------------ls22- ", ls22)
+        print("-----------------ls23- ", ls23)
+        print("-----------------ls24- ", ls24)
+        # queryset = cursor.execute(myquery)
+        # queryset2 = cursor.fetchall()
+        # print("queeeey2",queryset2)
+
+        for i in ls22:
+            ls2 = i.nameOfPuja
+
         ls2 = ls.nameOfPuja
+        # print('ls2 => ',ls2)
         # ls3 = Puja.objects.all().aggregate(Avg('yourRating'))
         # print(ls3 + " is your rating")
         # Here pujaName = ls2 will not work, it'll give expected id but got Laxi Puja error
@@ -296,11 +369,14 @@ def order(request, id):
         # print(email)
         # print(myPuja)
         ls = Puja.objects.get(id=id)
+        pujaName2 = Puja.objects.raw(
+            "SELECT * FROM main_puja WHERE id="+str(id))
+        print("-----------------puja2- ", pujaName2)
         # additionalCharges = 18
         # total_Charges = ls.price + additionalCharges
         # ls = ls.nameOfPuja
         # myPuja = Puja.objects.all()
-        return render(request, "order.html", {"ls": ls})
+        return render(request, "order.html", {"ls": pujaName2})
         # return render(request, "order.html", {"myPuja": myPuja, "ls": ls})
 
 
@@ -324,9 +400,12 @@ def myOrders(request):
     #     # print(deletionElement)
     #     return redirect(request.path)
     # else:
-    orderList = Order.objects.filter(email=request.user.email)
-    # print(orderList)
-    return render(request, "myOrders.html", {"orderList": orderList})
+    # orderList = Order.objects.filter(email=request.user.email)
+    myquery = "SELECT * FROM main_order WHERE email='" + \
+        str(request.user.email) + "'"
+    orderList2 = Order.objects.raw(myquery)
+    # print(orderList2)
+    return render(request, "myOrders.html", {"orderList": orderList2})
 
 
 def updateOrders(request, pk):
@@ -358,6 +437,10 @@ def updateOrders(request, pk):
         # phone_number = models.CharField(validators=[phone_regex], max_length=17, blank=True) # Validators should be a list
         Order.objects.filter(id=pk).update(
             first_name=first_name, last_name=last_name, mobile_no=mobile_no, pujaName=pujaName, dateOfPuja=dateOfPuja, address=address, email=email, total_pay=total, bookingDoneAt=orderRequestTime)
+        myquery = "UPDATE main_order SET first_name='" + str(first_name)+"',last_name='"+last_name+"',mobile_no='"+mobile_no+"',pujaName='"+ str(pujaName) + "',dateOfPuja='"+dateOfPuja+"',address='"+address+"',email='"+email + "',total_pay="+total+",bookingDoneAt='"+orderRequestTime+"' WHERE email="+email
+        # Order.objects.raw(myquery)
+        # conn.commit()
+        # conn.close()
         # Order.objects.refresh_from_db()
         # Order.save()
         messages.info(request, 'Order successfully updated')
@@ -365,6 +448,15 @@ def updateOrders(request, pk):
         return redirect("/myOrders")
     else:
         givenObject = Order.objects.get(id=pk)
+        myquery = "SELECT * FROM main_order WHERE id=" + str(pk)
+        # givenObject2 = Order.objects.raw(myquery)
+        givenObject2 = cursor.execute(myquery)
+        myqueryset2 = cursor.fetchall()
+        print("myqueryset2 ", myqueryset2)
+        # print("givenobject2.dateOfPuja ", givenObject2.dateOfPuja)
+        # for i in givenObject2:
+        # print("date_time2 ", i)
+        # date_time2 = i.dateOfPuja
         # form = OrderForm(request.POST)
         # abc = Order.objects.filter(id=givenObject.id)  # for filling up form
         # print(abc)
@@ -377,10 +469,13 @@ def updateOrders(request, pk):
 
 
 def deleteOrders(request, pk):
-    givenObject = Order.objects.get(id=pk)
+    # givenObject = Order.objects.get(id=pk)
     # if request.method == "POST":
     # print("deleting ", givenObject)
-    givenObject.delete()
+    # givenObject.delete()
+    cursor.execute('DELETE FROM main_order where id = {}'.format(pk))
+    conn.commit()
+    # conn.close()
     # Order.save()
     orderList = Order.objects.filter(email=request.user.email)
     return render(request, "myOrders.html", {"orderList": orderList})
@@ -388,14 +483,15 @@ def deleteOrders(request, pk):
 
 def pandit(response):
     # sortByField
-    panditList = Pandit.objects.all()
-    # print()
-    pandits = Pandit.objects.all().values('panditDescription')
+    # panditList = Pandit.objects.all()
+    panditList2 = Pandit.objects.raw("select * from main_pandit")
+    # print(panditList2)
+    # pandits = Pandit.objects.all().values('panditDescription')
     #   <!-- since we have to  show manytomany fields we use this format to show it -->
     #   note that pujaName is a queryset as it is manytomany fields so we have to parse it in jinja template
-    print((pandits))
+    # print((pandits))
 
-    return render(response, "pandit.html", {"panditList": panditList})
+    return render(response, "pandit.html", {"panditList": panditList2})
 
 
 def aboutUs(response):
